@@ -7,17 +7,27 @@ class DrawingBGTeam {
   }
 
   draw() {
-    this.x += random(-1, 1);
-    this.y += random(-1, 1);
+    this.x += random(-2, 2);
+    this.y += random(-2, 2);
 
     this.x = constrain(this.x, 0, windowWidth);
     this.y = constrain(this.y, 0, windowHeight);
 
     let imgX = floor(map(this.x, 0, windowWidth, 0, img.width));
     let imgY = floor(map(this.y, 0, windowHeight, 0, img.height));
-    pointsBuffer.stroke(img.get(imgX, imgY));
-    pointsBuffer.strokeWeight(penSize);
-    pointsBuffer.point(this.x, this.y);
+    // Get the colour of the sky image at that position
+    let skyImgCol = skyImg.get(imgX, imgY);
+    if (brightness(skyImgCol) > 0) {
+     // Determine if there is any colour information in the sky image at this location. If there is, set the colour of the brush to a gradient.
+      pointsBuffer.stroke(skyPenCol);
+      pointsBuffer.strokeWeight(penSize);
+      pointsBuffer.point(this.x, this.y);
+    } else {
+      // otherwise make the colour follow the colour of the corresponding position in the image.
+      pointsBuffer.stroke(img.get(imgX, imgY));
+      pointsBuffer.strokeWeight(penSize);
+      pointsBuffer.point(this.x, this.y);
+    }
   }
 }
 
@@ -73,6 +83,7 @@ let numWaves = 10;
 
 //We need a variable to hold our image
 let img;
+let skyImg;
 
 //We will divide the image into segments
 let numSegments = 100;
@@ -86,11 +97,16 @@ let x;
 let y;
 let penSize;
 
-
+// Parameters controlling colour transition changes
+let colAmt = 0;
+let skyPenCol;
+// Two colours for the gradient
+let col1, col2;
 
 //Load the image from disk
 function preload() {
   img = loadImage('1.png');
+  skyImg = loadImage("sky.jpg");
 }
 
 function setup() {
@@ -98,6 +114,11 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   pointsBuffer = createGraphics(windowWidth, windowHeight); 
   penSize = 30;
+
+
+  // Set the two gradient colours 
+  col1 = color("#3f5184");
+  col2 = color("#d0a85c");
 
   // Create multiple waves with varying properties
   for (let i = 0; i < numWaves; i++) {
@@ -114,6 +135,7 @@ function setup() {
   drawingTeam.push(new DrawingBGTeam(20,20));
   drawingTeam.push(new DrawingBGTeam(20,windowHeight));
   drawingTeam.push(new DrawingBGTeam(windowWidth,20));
+  drawingTeam.push(new DrawingBGTeam(width / 2, height / 2));
   drawingTeam.push(new DrawingBGTeam(windowWidth,windowHeight));
 
   
@@ -121,16 +143,18 @@ function setup() {
 
 function draw() {
   background(0);
+  // Use the sin function to set colAmt so that it changes periodically, allowing the colours to repeat back and forth as a gradient.
+  colAmt = map(sin(frameCount * 0.02), -1, 1, 0, 1);
+  // Get the gradient colour from col1 to col2.
+  skyPenCol = lerpColor(col1, col2, colAmt);
   //display the original image
   if (!drawSegments) {
     image(img, 0, 0, windowWidth, windowHeight);
   }
-  
 
   // Draw the points from the buffer onto the main canvas
-  image(pointsBuffer, 0, 0,windowWidth, windowHeight);
+  image(pointsBuffer, 0, 0, windowWidth, windowHeight);
 
-  
   //draw the image
   push();
   for (let i = 0; i < 1000; i++) {
@@ -140,13 +164,13 @@ function draw() {
   }
   pop();
 
- 
   // draw wave
   push();
   for (let i = 0; i < waves.length; i++) {
     waves[i].display();
   }
   pop();
+
 }
 
 function windowResized() {
