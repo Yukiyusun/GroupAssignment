@@ -175,7 +175,9 @@ function preload() {
 function setup() {
 
   createCanvas(windowWidth, windowHeight);
-  pointsBuffer = createGraphics(windowWidth, windowHeight); 
+  pointsBuffer = createGraphics(windowWidth, windowHeight);
+  // Separate layer for drawing building particles
+  flowfield = createGraphics(windowWidth, windowHeight); 
   penSize = 30;
 
 
