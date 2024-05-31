@@ -169,6 +169,7 @@ let col1, col2;
 function preload() {
   img = loadImage('1.png');
   skyImg = loadImage("sky.jpg");
+  buildImg = loadImage("building.jpg");
 }
 
 function setup() {
