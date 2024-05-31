@@ -1,12 +1,35 @@
 
-//Here is our class for the image segments, we start with the class keyword
+//class for drawing the drawing
 class DrawingBGTeam {
   constructor(x,y) {
     this.x = x;
     this.y = y;
   }
 
-  draw() {
+  drawSky() {
+    this.x += random(-2, 2);
+    this.y += random(-2, 2);
+  
+    this.x = constrain(this.x, 0, windowWidth);
+    this.y = constrain(this.y, 0, windowHeight);
+  
+    let skyImgCol = color(img.get(this.x, this.y));
+  
+    // Interpolate the sky color if transitioning
+    if (isTransitioning) {
+      transitionProgress += 0.000001; // Adjust the speed of transition
+      transitionProgress = constrain(transitionProgress, 0,0.5); // Clamp between 0 and 1
+      let targetColor = lerpColor(color(0,0,0), color(0,0,139), colAmt);
+      let currentColor = lerpColor(skyImgCol, targetColor, transitionProgress);
+      pointsBuffer.stroke(currentColor);
+      
+    }
+    pointsBuffer.strokeWeight(penSize);
+    pointsBuffer.point(this.x, this.y);
+  }
+  
+  
+  drawOriginal() {
     this.x += random(-2, 2);
     this.y += random(-2, 2);
 
@@ -15,18 +38,20 @@ class DrawingBGTeam {
 
     let imgX = floor(map(this.x, 0, windowWidth, 0, img.width));
     let imgY = floor(map(this.y, 0, windowHeight, 0, img.height));
-    // Get the colour of the sky image at that position
-    let skyImgCol = skyImg.get(imgX, imgY);
-    if (brightness(skyImgCol) > 0) {
-     // Determine if there is any colour information in the sky image at this location. If there is, set the colour of the brush to a gradient.
-      pointsBuffer.stroke(skyPenCol);
-      pointsBuffer.strokeWeight(penSize);
-      pointsBuffer.point(this.x, this.y);
-    } else {
-      // otherwise make the colour follow the colour of the corresponding position in the image.
-      pointsBuffer.stroke(img.get(imgX, imgY));
-      pointsBuffer.strokeWeight(penSize);
-      pointsBuffer.point(this.x, this.y);
+
+    // Update the coverage array
+    let pixelX = floor(this.x / 2) * 2; // Ensure even number
+    let pixelY = floor(this.y / 2) * 2; // Ensure even number
+    // Ensure pixelX and pixelY are within bounds
+
+    if (pixelX >= 0 && pixelX < windowWidth && pixelY >= 0 && pixelY < windowHeight) {
+      if (!coverage[pixelX][pixelY]) {
+        coverage[pixelX][pixelY] = true;
+        coveredPixels++;
+        pointsBuffer.stroke(img.get(imgX, imgY));
+        pointsBuffer.strokeWeight(penSize);
+        pointsBuffer.point(this.x, this.y);
+      }
     }
   }
 }
@@ -59,9 +84,21 @@ class Wave {
       //Every 10 pixels we sample the noise function
       let waveHeight = map(noise(xoff), 0, 1, -this.amplitude, this.amplitude);
       let imgX = floor(map(x, 0, windowWidth, 0, img.width));
-      let col = img.get(imgX, floor(this.yBase));
-      // Set the stroke color to the sampled color
-      stroke(col);
+
+
+      if (isTransitioning) {
+        transitionProgress += 0.000001; // Adjust the speed of transition
+        transitionProgress = constrain(transitionProgress, 0, 0.5); // Clamp between 0 and 1
+        let col = img.get(imgX, floor(this.yBase));
+        let targetColor = lerpColor(color(0,0,0), color(0,0,139), colAmt);
+        let currentColor = lerpColor(color(col), targetColor, transitionProgress);
+        let waveColor = color(red(currentColor), green(currentColor), blue(currentColor), 15);
+        stroke(waveColor);
+      } else {
+        let col = img.get(imgX, floor(this.yBase));
+        let waveColor = color(red(col), green(col), blue(col), 15);
+        stroke(waveColor);
+      }
       //We draw a vertex at the x position and the yBase position + the wave height
       point(x, this.yBase + waveHeight);
       //Increasing xoff here means the next wave point will be sampled from a different part of the noise function
@@ -84,13 +121,7 @@ let numWaves = 10;
 //We need a variable to hold our image
 let img;
 let skyImg;
-
-//We will divide the image into segments
-let numSegments = 100;
-
-//We will store the segments in an array
-let segments = [];
-
+let transitionProgress = 0;
 //lets add a variable to switch between drawing the image and the segments
 let drawSegments = true;
 let x;
@@ -103,6 +134,12 @@ let skyPenCol;
 // Two colours for the gradient
 let col1, col2;
 
+// Array to track coverage of the screen
+let coverage;
+let totalPixels;
+let coveredPixels;
+let pointsBuffer;
+let isTransitioning;
 //Load the image from disk
 function preload() {
   img = loadImage('1.png');
@@ -117,7 +154,7 @@ function setup() {
 
 
   // Set the two gradient colours 
-  col1 = color("#3f5184");
+  col1 = color("#00FF00");
   col2 = color("#d0a85c");
 
   // Create multiple waves with varying properties
@@ -138,6 +175,17 @@ function setup() {
   drawingTeam.push(new DrawingBGTeam(width / 2, height / 2));
   drawingTeam.push(new DrawingBGTeam(windowWidth,windowHeight));
 
+  // Initialize the coverage array
+  coverage = [];
+  for (let i = 0; i < windowWidth; i += 2) {
+    coverage[i] = [];
+    for (let j = 0; j < windowHeight; j += 2) {
+      coverage[i][j] = false;
+    }
+  }
+
+  totalPixels = floor((windowWidth / 2) * (windowHeight / 2));
+  coveredPixels = 0;
   
 }
 
@@ -145,8 +193,7 @@ function draw() {
   background(0);
   // Use the sin function to set colAmt so that it changes periodically, allowing the colours to repeat back and forth as a gradient.
   colAmt = map(sin(frameCount * 0.02), -1, 1, 0, 1);
-  // Get the gradient colour from col1 to col2.
-  skyPenCol = lerpColor(col1, col2, colAmt);
+
   //display the original image
   if (!drawSegments) {
     image(img, 0, 0, windowWidth, windowHeight);
@@ -157,12 +204,25 @@ function draw() {
 
   //draw the image
   push();
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 5000; i++) {
+    if (allCovered()) {
+      break;
+    }
     for (let i = 0; i < drawingTeam.length; i++) {
-      drawingTeam[i].draw();
+      drawingTeam[i].drawOriginal();
     }
   }
+  for (let i = 0; i < 5000; i++) {
+    for (let i = 0; i < drawingTeam.length; i++) {
+      if (allCovered()) {
+        drawingTeam[i].drawSky();
+      }
+    }
+  }
+
   pop();
+
+
 
   // draw wave
   push();
@@ -177,6 +237,22 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   pointsBuffer.resizeCanvas(windowWidth, windowHeight);
   penSize = windowHeight/30;
+
+  // Initialize the coverage array
+  coverage = [];
+  for (let i = 0; i < windowWidth; i += 2) {
+    coverage[i] = [];
+    for (let j = 0; j < windowHeight; j += 2) {
+      coverage[i][j] = false;
+    }
+  }
+
+  totalPixels = floor((windowWidth / 2) * (windowHeight / 2));
+  coveredPixels = 0;
+  
+
+
+
 
   //redraw the waves
   waves = [];
@@ -195,3 +271,11 @@ function keyPressed() {
     drawSegments = !drawSegments;
   }
 } 
+
+// Function to check if all pixels are covered
+function allCovered() {
+  if (coveredPixels === totalPixels) {
+    isTransitioning = true; // Start the transition
+  }
+  return coveredPixels === totalPixels;
+}
