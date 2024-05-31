@@ -138,10 +138,14 @@ let waves = [];
 let drawingTeam = [];
 // Number of waves to create
 let numWaves = 10;
+// Array to store particle
 
-//We need a variable to hold our image
+let particle = [];
+
+//We need variable to hold our image
 let img;
 let skyImg;
+let buildImg;
 
 //We will divide the image into segments
 let numSegments = 100;
