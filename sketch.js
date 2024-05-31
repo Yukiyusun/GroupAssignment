@@ -86,7 +86,27 @@ class Particle {
   display() {
     let imgX = floor(map(this.x, 0, windowWidth, 0, img.width));
     let imgY = floor(map(this.y, 0, windowHeight, 0, img.height));
-
+    // Get the colour of the building image at that position based on the particle position.
+    let buildImgCol = buildImg.get(imgX, imgY);
+    if (brightness(buildImgCol) > 0) {
+      // Determine if there is any colour information in the building image at this location.
+      if (!this.col || random(100) < 1) {
+        // Get the colours from the image as particle colours
+        this.col = buildImgCol
+        // Reduce the transparency of the colour
+        this.col=color(red(this.col),green(this.col),blue(this.col),90)
+      }
+      // Set the blend mode to ADD to make the particles fluorescent.
+      flowfield.blendMode(ADD);
+      flowfield.strokeWeight(4);
+      flowfield.stroke(245, 100);
+      flowfield.stroke(this.col);
+      // Drawing particles
+      flowfield.point(this.x, this.y);
+      // Recovery Mix Mode
+      
+      flowfield.blendMode(BLEND);
+    }
   }
 }
 
