@@ -231,7 +231,15 @@ function draw() {
     }
   }
   pop();
-
+  // Draw the contents of the building on the flowfield layer.
+  // and is semi-transparent, the particles will have a trailing effect.
+  flowfield.tint(255, 10);
+  flowfield.image(buildImg, 0, 0, windowWidth, windowHeight);
+  // Drawing particles
+  for (let i = 0; i < particle.length; i++) {
+    particle[i].update();
+    particle[i].display();
+  }
   // draw wave
   push();
   for (let i = 0; i < waves.length; i++) {
