@@ -220,6 +220,8 @@ function draw() {
 
   // Draw the points from the buffer onto the main canvas
   image(pointsBuffer, 0, 0, windowWidth, windowHeight);
+  // Draw the building particle screen to the canvas
+  image(flowfield, 0, 0, windowWidth, windowHeight);
 
   //draw the image
   push();
