@@ -180,7 +180,6 @@ function setup() {
   flowfield = createGraphics(windowWidth, windowHeight); 
   penSize = 30;
 
-
   // Set the two gradient colours 
   col1 = color("#3f5184");
   col2 = color("#d0a85c");
@@ -202,7 +201,9 @@ function setup() {
   drawingTeam.push(new DrawingBGTeam(windowWidth,20));
   drawingTeam.push(new DrawingBGTeam(width / 2, height / 2));
   drawingTeam.push(new DrawingBGTeam(windowWidth,windowHeight));
-
+  for (let i = 0; i < 1800; i++) {
+    particle.push(new Particle());
+  }
   
 }
 
