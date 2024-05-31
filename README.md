@@ -1,3 +1,9 @@
+# Individual 
+## 1
+## 2
+- 
+
+
 # GroupAssignment
  
 map()

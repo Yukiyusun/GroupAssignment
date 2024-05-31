@@ -108,6 +108,29 @@ class Particle {
       flowfield.blendMode(BLEND);
     }
   }
+  update() {
+    // Calculate the angle of particle motion with the noise function
+    let theta =
+      noise(
+        this.x * 0.005,
+        this.y * 0.005,
+        frameCount * 0.02 + this.noiseSeed
+      ) * 360;
+    // Calculate the speed of motion from angles using trigonometry
+    let xSpd = cos(radians(theta)) * 2;
+    let ySpd = sin(radians(theta)) * 2;
+    // Particles move according to velocity
+    this.x += xSpd;
+    this.y += ySpd;
+    this.life -= 1;
+    if (this.life <= 0) {
+      // Refresh the position of the particle when life is less than 0.
+      this.life = 100;
+      this.x = random(width / 2);
+      this.y = random(height);
+    }
+  }
+
 }
 
 // Array to store multiple waves
