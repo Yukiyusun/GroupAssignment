@@ -73,6 +73,8 @@ class Wave {
   }
 
 }
+
+// This particle class, which will draw the fluorescent flow field of the building.
 class Particle {
   constructor() {
     // Randomly set particle coordinates and other parameters
@@ -81,7 +83,13 @@ class Particle {
     this.life = random(100);
     this.noiseSeed = random(100);
   }
+  display() {
+    let imgX = floor(map(this.x, 0, windowWidth, 0, img.width));
+    let imgY = floor(map(this.y, 0, windowHeight, 0, img.height));
+
+  }
 }
+
 // Array to store multiple waves
 let waves = [];
 let drawingTeam = [];
