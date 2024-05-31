@@ -73,7 +73,15 @@ class Wave {
   }
 
 }
-
+class Particle {
+  constructor() {
+    // Randomly set particle coordinates and other parameters
+    this.x = random(width / 2);
+    this.y = random(height);
+    this.life = random(100);
+    this.noiseSeed = random(100);
+  }
+}
 // Array to store multiple waves
 let waves = [];
 let drawingTeam = [];
